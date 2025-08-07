@@ -176,4 +176,5 @@ jobs:
         env:
           TAGS: ${{ steps.push.outputs.digest }}
           COSIGN_EXPERIMENTAL: false
+          # CORRECTED LINE: Removed the extra text.
           COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
