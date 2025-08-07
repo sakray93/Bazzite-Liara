@@ -135,4 +135,4 @@ rm -rf "${KERNEL_TEMP_DIR}"
 echo "--- build.sh script finished ---"
 
 # The 'ostree container commit' command is handled by the Containerfile
-# after this script completes successfully.
+# after this script completes successfully. 
