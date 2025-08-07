@@ -7,7 +7,7 @@ COPY build_files /
 # Stage 2: Build your custom Bazzite image
 # This uses a Bazzite-KDE image as the base.
 # You can choose other Bazzite variants or Universal Blue images here if needed.
-FROM ghcr.io/ublue-os/bazzite-kde:latest
+FROM ghcr.io/ublue-os/bazzite-kde:stable
 
 ## Other possible base images include:
 # FROM ghcr.io/ublue-os/bazzite-kde:latest
