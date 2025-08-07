@@ -19,7 +19,7 @@ env:
   IMAGE_LOGO_URL: "https://avatars.githubusercontent.com/u/120078124?s=200&v=4"  # Put your own image here for a fancy profile on https://artifacthub.io/!
   IMAGE_NAME: "${{ github.event.repository.name }}"  # output image name, usually same as repo name
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"  # do not edit
-  DEFAULT_TAG: "latest"
+  DEFAULT_TAG: "latest" # Keep as latest or stable, as per your preference. The issue is authentication, not the tag itself.
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}-${{ inputs.brand_name}}-${{ inputs.stream_name }}
@@ -97,7 +97,7 @@ jobs:
           sep-tags: " "
           sep-annotations: " "
 
-      # ADD THIS STEP: Explicitly log in to GHCR before building
+      # Login to GHCR for Buildah to pull base image
       - name: Login to GitHub Container Registry for Buildah
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
         with:
@@ -111,12 +111,12 @@ jobs:
         with:
           containerfiles: |
             ./Containerfile
-          # Postfix image name with -custom to make it a little more descriptive
-          # Syntax: https://docs.github.com/en/actions/learn-github-actions/expressions#format
           image: ${{ env.IMAGE_NAME }}
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
           oci: false
+          # ADD THIS LINE: Pass the authfile to buildah
+          extra-args: --authfile /run/user/1000/containers/auth.json
 
       # ... (rest of the workflow, including the Push To GHCR and Sign container image steps) ...
       # The existing Login to GitHub Container Registry step later in the workflow
