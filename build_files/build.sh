@@ -78,7 +78,8 @@ echo "--- Installing AI tools for creators ---"
 # Python virtualenv for AI tools
 dnf5 install -y python3-pip python3-virtualenv
 
-# The `mkdir` command is not needed as `/opt` already exists.
+# Re-added the necessary `mkdir -p` command to create the directory
+mkdir -p /opt/ai-tools
 cd /opt/ai-tools
 
 # Corrected virtualenv setup: chained commands to ensure pip runs inside the venv.
