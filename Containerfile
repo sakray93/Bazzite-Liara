@@ -1,18 +1,10 @@
 # Stage 1: Prepare the build context (ctx)
-# This stage is used to copy your local build scripts and files
-# into a temporary image that can be mounted into the main build stage.
 FROM scratch AS ctx
 COPY build_files /
 
-# Stage 2: Build your custom Bazzite image
-# Using the specific, dated tag for the base Bazzite image.
-FROM ghcr.io/ublue-os/bazzite:42.20250804
-
-## Other possible base images include:
-# FROM ghcr.io/ublue-os/bazzite-kde:main
-# Universal Blue Images: https://github.com/orgs/ublue-os/packages
-# Fedora base image: quay.io/fedora/fedora-bootc:41
-# CentOS base images: quay.io/centos-bootc/centos-bootc:stream10
+# Stage 2: Build your custom Bazzite KDE image
+# Using the dedicated Chromebook KDE base image.
+FROM ghcr.io/ublue-os/bazzite-chromebook-kde:main
 
 ### MODIFICATIONS
 ## The following RUN directive mounts the 'ctx' stage and executes your 'build.sh' script.
@@ -23,8 +15,3 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
     /ctx/build.sh && \
     ostree container commit
-
-### LINTING
-## This line is typically for post-build validation and should not be part of the build process itself.
-## It's commented out as it's not needed for the image creation.
-# RUN bootc container lint
