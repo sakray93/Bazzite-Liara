@@ -41,7 +41,6 @@ flatpak install -y flathub \
     org.inkscape.Inkscape \
     org.blender.Blender \
     com.valvesoftware.Steam \
-    net.lutris.Lutris \
     com.visualstudio.code
 
 echo "--- Installing Wine (Staging) via Flatpak ---"
@@ -142,59 +141,6 @@ Type=Application
 Categories=Graphics;Utility;Development;
 EOF
 
-###############################################################################
-# SECTION 8: Copilot Nativefier App with Custom Icon
-###############################################################################
 
-echo "--- Creating Copilot desktop app with Nativefier ---"
-
-# Ensure Node.js and Nativefier are installed
-sudo dnf install -y nodejs
-npm install -g nativefier
-
-# Create Copilot app
-mkdir -p /opt/copilot-app
-nativefier --name "Copilot" --single-instance --tray --width 1280 --height 800 "https://copilot.microsoft.com" /opt/copilot-app
-
-# Download custom icon
-mkdir -p /usr/share/icons/copilot
-curl -L -o /usr/share/icons/copilot/copilot.png https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Microsoft_Copilot_Icon.svg/1024px-Microsoft_Copilot_Icon.svg.png
-
-# Create launcher
-cat <<EOF > /usr/share/applications/copilot.desktop
-[Desktop Entry]
-Name=Copilot
-Comment=Launch Microsoft Copilot AI Assistant
-Exec=/opt/copilot-app/Copilot-linux-x64/Copilot
-Icon=/usr/share/icons/copilot/copilot.png
-Terminal=false
-Type=Application
-Categories=Utility;Development;AI;
-EOF
-
-###############################################################################
-# SECTION 9: Post-install Script for Microsoft Edge
-###############################################################################
-
-echo "--- Creating post-install script for Microsoft Edge ---"
-
-cat <<'EOF' > /usr/local/bin/install-edge.sh
-#!/usr/bin/env bash
-echo "Installing Microsoft Edge via Flatpak..."
-flatpak install -y flathub com.microsoft.Edge
-EOF
-
-chmod +x /usr/local/bin/install-edge.sh
-
-cat <<EOF > /usr/share/applications/install-edge.desktop
-[Desktop Entry]
-Name=Install Microsoft Edge
-Comment=Run this once to install Edge browser
-Exec=/usr/local/bin/install-edge.sh
-Icon=web-browser
-Terminal=true
-Type=Application
-Categories=Network;Utility;
-EOF
 
 echo "--- Custom tools setup completed ---"
