@@ -6,6 +6,7 @@ set -ouex pipefail
 
 echo "--- Installing core packages and general utilities ---"
 
+# Corrected dnf5 command: removed non-existent packages.
 dnf5 install -y \
     git \
     python3 \
@@ -13,11 +14,10 @@ dnf5 install -y \
     pulseaudio-utils \
     curl \
     wget \
-    neofetch \
+    fastfetch \
     htop \
     vim-enhanced \
     kde-gtk-config \
-    kde-settings-patch \
     mesa-vulkan-drivers \
     vulkan-loader \
     vulkan-tools \
@@ -31,9 +31,8 @@ dnf5 install -y \
     steam \
     lutris \
     wine \
-    wayland-protocols \
-    qt6-* \
-    qt5-* 
+    'qt6-*' \
+    'qt5-*'
 
 ### SECTION 2: Android Emulation Support (Waydroid)
 
@@ -65,8 +64,9 @@ KEYBOARD_REPO_BASE_URL="https://raw.githubusercontent.com/WeirdTreeThing/cros-ke
 curl -sSL "${KEYBOARD_REPO_BASE_URL}/90-cros-keyboard.rules" -o /etc/udev/rules.d/90-cros-keyboard.rules
 curl -sSL "${KEYBOARD_REPO_BASE_URL}/cros-keyboard" -o /usr/share/libinput/cros-keyboard
 chmod 644 /usr/share/libinput/cros-keyboard
-udevadm control --reload-rules
-udevadm trigger
+# Note: udevadm commands are typically for live systems; files will be correctly placed in the image.
+# udevadm control --reload-rules
+# udevadm trigger
 
 ### SECTION 5: Custom Kernel Installation (AMD Stoney Ridge)
 
@@ -122,10 +122,10 @@ dnf5 install -y python3-pip python3-virtualenv
 mkdir -p /opt/ai-tools
 cd /opt/ai-tools
 
-# Setup Stable Diffusion Web UI environment (minimal)
-python3 -m virtualenv venv
-source venv/bin/activate
-pip install --upgrade pip
+# Corrected virtualenv setup: chained commands to ensure pip runs inside the venv.
+python3 -m virtualenv venv && \
+source venv/bin/activate && \
+pip install --upgrade pip && \
 pip install diffusers transformers accelerate --quiet
 
 # Install other AI tools (stable-diffusion-webui, etc.) - placeholder for actual install commands
