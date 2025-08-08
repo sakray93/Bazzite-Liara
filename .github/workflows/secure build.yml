@@ -25,13 +25,13 @@ jobs:
             -t sakray93/bazzite-kde-ai:latest .
 
       - name: Log in to Docker Hub
-        if: ${{ and(secrets.DOCKERHUB_USERNAME, secrets.DOCKERHUB_TOKEN) }}
+        if: ${{ secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN }}
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Push container image to Docker Hub
-        if: ${{ and(secrets.DOCKERHUB_USERNAME, secrets.DOCKERHUB_TOKEN) }}
+        if: ${{ secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN }}
         run: |
           buildah push sakray93/bazzite-kde-ai:latest docker://docker.io/sakray93/bazzite-kde-ai:latest
