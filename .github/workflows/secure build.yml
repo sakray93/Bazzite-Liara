@@ -1,91 +1,30 @@
-name: Build Bazzite KDE Image
+# Stage 1: Prepare the build context (ctx)
+# This stage is used to copy your local build scripts and files
+# into a temporary image that can be mounted into the main build stage.
+FROM scratch AS ctx
+COPY build_files /
 
-on:
-  schedule:
-    # Build at 10:00 UTC every Tuesday and Saturday
-    - cron: "00 10 * * 2,6"
-  push:
-    branches: [ "main" ]
-    paths-ignore: # don't rebuild if only documentation has changed
-      - "**.md"
-  pull_request:
-    branches: [ "main" ]
-    types: [opened, synchronize, reopened]
-  workflow_dispatch: # Allow manually triggering builds
+# Stage 2: Build your custom Bazzite image
+# Using the specific, dated tag for the base Bazzite image.
+FROM ghcr.io/ublue-os/bazzite:42.20250804
 
-concurrency:
-  # Only run one build at a time for this workflow
-  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
-  cancel-in-progress: true
+## Other possible base images include:
+# FROM ghcr.io/ublue-os/bazzite-kde:main
+# Universal Blue Images: https://github.com/orgs/ublue-os/packages
+# Fedora base image: quay.io/fedora/fedora-bootc:41
+# CentOS base images: quay.io/centos-bootc/centos-bootc:stream10
 
-jobs:
-  build-image:
-    name: Build Custom Bazzite KDE Image
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
+### MODIFICATIONS
+## The following RUN directive mounts the 'ctx' stage and executes your 'build.sh' script.
+## All modifications defined in 'build.sh' will be applied here.
+RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
+    --mount=type=cache,dst=/var/cache \
+    --mount=type=cache,dst=/var/log \
+    --mount=type=tmpfs,dst=/tmp \
+    /ctx/build.sh && \
+    ostree container commit
 
-    strategy:
-      fail-fast: false # Stop GH from cancelling all matrix builds if one fails
-      matrix:
-        containerfile_path:
-          - ./Containerfile
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Buildah
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y buildah
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build Bazzite KDE image
-        uses: redhat-actions/buildah-build@v2
-        id: build_image
-        with:
-          containerfiles: ${{ matrix.containerfile_path }}
-          image: ghcr.io/${{ github.repository_owner }}/bazzite-kde
-          tags: latest
-          context: .
-          labels: |
-            containers.bootc=1
-            org.opencontainers.image.title=Bazzite-KDE
-            org.opencontainers.image.description=Customized Bazzite KDE Fedora image
-            org.opencontainers.image.version=latest
-            org.opencontainers.image.source=${{ github.repository }}
-            org.opencontainers.image.vendor=${{ github.repository_owner }}
-            org.opencontainers.image.licenses=Apache-2.0
-
-      - name: Push image to GitHub Container Registry
-        if: github.ref == 'refs/heads/main'
-        uses: redhat-actions/push-to-registry@v2
-        with:
-          image: ${{ steps.build_image.outputs.image }}
-          tags: ${{ steps.build_image.outputs.tags }}
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Log in to Docker Hub
-        # Corrected condition to avoid the "Unrecognized named-value" error
-        if: github.ref == 'refs/heads/main'
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Push image to Docker Hub
-        # Corrected condition to avoid the "Unrecognized named-value" error
-        if: github.ref == 'refs/heads/main'
-        run: |
-          buildah push ${{ steps.build_image.outputs.image }}:${{ steps.build_image.outputs.tags }} docker://docker.io/${{ secrets.DOCKERHUB_USERNAME }}/bazzite-kde:${{ steps.build_image.outputs.tags }}
+### LINTING
+## This line is typically for post-build validation and should not be part of the build process itself.
+## It's commented out as it's not needed for the image creation.
+# RUN bootc container lint
