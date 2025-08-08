@@ -3,8 +3,8 @@ FROM scratch AS ctx
 COPY build_files /
 
 # Stage 2: Build your custom Bazzite KDE image
-# Using the dedicated Chromebook KDE base image.
-FROM ghcr.io/ublue-os/bazzite-chromebook-kde:main
+# Using the correct base image which includes support for Chromebooks.
+FROM ghcr.io/ublue-os/bazzite-kde:main
 
 ### MODIFICATIONS
 ## The following RUN directive mounts the 'ctx' stage and executes your 'build.sh' script.
