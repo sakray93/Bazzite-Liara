@@ -5,9 +5,8 @@ FROM scratch AS ctx
 COPY build_files /
 
 # Stage 2: Build your custom Bazzite image
-# This uses a Bazzite-KDE image as the base.
-# We are now using the '42' tag for Fedora 42 as per your request.
-FROM ghcr.io/ublue-os/bazzite-kde:42
+# Using the specific stable tag for Fedora 42.
+FROM ghcr.io/ublue-os/bazzite-kde:stable-42.20250804
 
 ## Other possible base images include:
 # FROM ghcr.io/ublue-os/bazzite-kde:latest
