@@ -78,8 +78,7 @@ echo "--- Installing AI tools for creators ---"
 # Python virtualenv for AI tools
 dnf5 install -y python3-pip python3-virtualenv
 
-# This is the corrected line. Using 'mkdir -p' prevents errors if the directory already exists.
-mkdir -p /opt/ai-tools
+# The `mkdir` command is not needed as `/opt` already exists.
 cd /opt/ai-tools
 
 # Corrected virtualenv setup: chained commands to ensure pip runs inside the venv.
@@ -92,7 +91,38 @@ pip install diffusers transformers accelerate --quiet
 
 deactivate
 
-### SECTION 6: Create AI Tool Launcher Script and Desktop Entry
+### SECTION 6: Drawing Mode Setup
+
+echo "--- Creating a 'Drawing Mode' launcher ---"
+
+# Create a shell script to launch Krita in full screen
+cat <<'EOF' > /usr/local/bin/launch-drawing-mode.sh
+#!/usr/bin/env bash
+# This script launches a drawing application (Krita) in a touch-friendly way.
+
+# Switch to the Krita session
+# Replace with the actual command to switch the session manager or launch gamescope/kiosk mode
+# For a simple full-screen app, just running Krita is often enough.
+# Krita has a "canvas only" mode which can be activated with the 'Tab' key.
+krita --fullscreen --nonscaling-mode
+EOF
+
+chmod +x /usr/local/bin/launch-drawing-mode.sh
+
+mkdir -p /usr/share/applications
+
+cat <<'EOF' > /usr/share/applications/drawing-mode.desktop
+[Desktop Entry]
+Name=Drawing Mode
+Comment=Launch Krita for a touch-optimized drawing experience
+Exec=/usr/local/bin/launch-drawing-mode.sh
+Icon=applications-graphics
+Terminal=false
+Type=Application
+Categories=Graphics;Utility;
+EOF
+
+### SECTION 7: Create AI Tool Launcher Script and Desktop Entry
 
 echo "--- Creating AI tool launcher script and desktop shortcut ---"
 
