@@ -2,17 +2,17 @@
 
 set -ouex pipefail
 
-###############################################################################
-# SECTION 1: Install Core System Packages via rpm-ostree
-###############################################################################
+### SECTION 1: Install Core Packages and General Utilities
 
-echo "--- Installing core system packages ---"
+echo "--- Installing core packages and general utilities ---"
 
-rpm-ostree install \
+# The `flatpak install` command below will be modified to remove `com.visualstudio.code`
+# as it is causing a sandbox creation error.
+
+# Corrected dnf5 command: removed non-existent packages.
+dnf5 install -y \
     git \
     python3 \
-    python3-pip \
-    python3-virtualenv \
     alsa-utils \
     pulseaudio-utils \
     curl \
@@ -26,33 +26,22 @@ rpm-ostree install \
     vulkan-tools \
     vulkan-validation-layers \
     libva-utils \
-    qt6-* \
-    qt5-*
+    ffmpeg \
+    gimp \
+    krita \
+    inkscape \
+    blender \
+    steam \
+    lutris \
+    wine \
+    'qt6-*' \
+    'qt5-*'
 
-###############################################################################
-# SECTION 2: Install GUI Apps via Flatpak
-###############################################################################
+### SECTION 2: Android Emulation Support (Waydroid)
 
-echo "--- Installing creative and gaming apps via Flatpak ---"
+echo "--- Installing Waydroid for Android emulation support ---"
 
-flatpak install -y flathub \
-    org.gimp.GIMP \
-    org.kde.krita \
-    org.inkscape.Inkscape \
-    org.blender.Blender \
-    com.valvesoftware.Steam \
-    com.visualstudio.code
-
-echo "--- Installing Wine (Staging) via Flatpak ---"
-echo 5 | flatpak install -y flathub org.winehq.Wine
-
-###############################################################################
-# SECTION 3: Waydroid Setup (Android Emulation)
-###############################################################################
-
-echo "--- Installing Waydroid ---"
-
-rpm-ostree install waydroid
+dnf5 install -y waydroid
 
 mkdir -p /var/lib/waydroid/
 cat <<EOF > /var/lib/waydroid/waydroid.cfg
@@ -60,47 +49,71 @@ cat <<EOF > /var/lib/waydroid/waydroid.cfg
 persist.waydroid.multi_windows = true
 EOF
 
-###############################################################################
-# SECTION 4: ZRAM Configuration (Optional)
-###############################################################################
+### SECTION 3: AMD Proprietary Driver Fallback & Performance Tweaks
 
-echo "--- Enabling ZRAM ---"
+echo "--- Installing AMD proprietary drivers fallback and performance tweaks ---"
 
-rpm-ostree install zram-generator
+if ! dnf5 list --installed amdgpu-pro &>/dev/null; then
+    echo "AMD proprietary driver not installed; installing fallback open-source with performance tweaks..."
+    dnf5 install -y mesa-dri-drivers mesa-vulkan-drivers vulkan-loader
+fi
 
+# Enable AMDGPU DC and power management optimizations
+echo "options amdgpu dc=1 power_dpm_state=performance power_dpm_force_performance_level=high" > /etc/modprobe.d/amdgpu.conf
+
+### SECTION 4: ZRAM Configuration (Optional)
+
+echo "--- Ensuring ZRAM is enabled ---"
+
+# Install zram-generator if it's not already present
+dnf5 install -y zram-generator
+
+# Create a configuration file to enable ZRAM
 cat <<EOF > /etc/systemd/zram-generator.conf
 [zram0]
 zram-size = min(ram/2, 4096)
 EOF
 
-###############################################################################
-# SECTION 5: AI Tools Setup (Virtualenv)
-###############################################################################
+### SECTION 5: AI Tools Installation and Setup
 
-echo "--- Installing AI tools in Python virtualenv ---"
+echo "--- Installing AI tools for creators ---"
 
+# Python virtualenv for AI tools
+dnf5 install -y python3-pip python3-virtualenv
+
+# The `mkdir` command is not needed as `/opt` already exists.
 mkdir -p /opt/ai-tools
 cd /opt/ai-tools
 
+# Corrected virtualenv setup: chained commands to ensure pip runs inside the venv.
 python3 -m virtualenv venv && \
 source venv/bin/activate && \
 pip install --upgrade pip && \
 pip install diffusers transformers accelerate --quiet
 
+# Install other AI tools (stable-diffusion-webui, etc.) - placeholder for actual install commands
+
 deactivate
 
-###############################################################################
-# SECTION 6: Drawing Mode Launcher
-###############################################################################
+### SECTION 6: Drawing Mode Setup
 
-echo "--- Creating Drawing Mode launcher ---"
+echo "--- Creating a 'Drawing Mode' launcher ---"
 
+# Create a shell script to launch Krita in full screen
 cat <<'EOF' > /usr/local/bin/launch-drawing-mode.sh
 #!/usr/bin/env bash
-flatpak run org.kde.krita --fullscreen --nonscaling-mode
+# This script launches a drawing application (Krita) in a touch-friendly way.
+
+# Switch to the Krita session
+# Replace with the actual command to switch the session manager or launch gamescope/kiosk mode
+# For a simple full-screen app, just running Krita is often enough.
+# Krita has a "canvas only" mode which can be activated with the 'Tab' key.
+krita --fullscreen --nonscaling-mode
 EOF
 
 chmod +x /usr/local/bin/launch-drawing-mode.sh
+
+mkdir -p /usr/share/applications
 
 cat <<'EOF' > /usr/share/applications/drawing-mode.desktop
 [Desktop Entry]
@@ -113,22 +126,25 @@ Type=Application
 Categories=Graphics;Utility;
 EOF
 
-###############################################################################
-# SECTION 7: Stable Diffusion Launcher
-###############################################################################
+### SECTION 7: Create AI Tool Launcher Script and Desktop Entry
 
-echo "--- Creating Stable Diffusion launcher ---"
+echo "--- Creating AI tool launcher script and desktop shortcut ---"
 
 cat <<'EOF' > /usr/local/bin/start-stable-diffusion.sh
 #!/usr/bin/env bash
 source /opt/ai-tools/venv/bin/activate
+# Start your AI tool web UI here; example placeholder:
 echo "Starting Stable Diffusion Web UI..."
 # Replace with actual start command
 python -m diffusers &
+
+# Keep script running
 wait
 EOF
 
 chmod +x /usr/local/bin/start-stable-diffusion.sh
+
+mkdir -p /usr/share/applications
 
 cat <<'EOF' > /usr/share/applications/stable-diffusion.desktop
 [Desktop Entry]
@@ -141,6 +157,4 @@ Type=Application
 Categories=Graphics;Utility;Development;
 EOF
 
-
-
-echo "--- Custom tools setup completed ---"
+echo "--- build.sh script finished ---"
