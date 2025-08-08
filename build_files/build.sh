@@ -58,9 +58,18 @@ fi
 # Enable AMDGPU DC and power management optimizations
 echo "options amdgpu dc=1 power_dpm_state=performance power_dpm_force_performance_level=high" > /etc/modprobe.d/amdgpu.conf
 
-### SECTION 4: Vulkan SDK Setup
+### SECTION 4: ZRAM Configuration (Optional)
 
-echo "--- Installing Vulkan SDK ---"
+echo "--- Ensuring ZRAM is enabled ---"
+
+# Install zram-generator if it's not already present
+dnf5 install -y zram-generator
+
+# Create a configuration file to enable ZRAM
+cat <<EOF > /etc/systemd/zram-generator.conf
+[zram0]
+zram-size = min(ram/2, 4096)
+EOF
 
 ### SECTION 5: AI Tools Installation and Setup
 
@@ -69,6 +78,7 @@ echo "--- Installing AI tools for creators ---"
 # Python virtualenv for AI tools
 dnf5 install -y python3-pip python3-virtualenv
 
+# This is the corrected line. Using 'mkdir -p' prevents errors if the directory already exists.
 mkdir -p /opt/ai-tools
 cd /opt/ai-tools
 
