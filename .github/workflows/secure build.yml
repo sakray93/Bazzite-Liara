@@ -19,8 +19,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Removed the 'redhat-actions/setup-buildah@v2' action
-      # and replaced it with a direct Buildah installation step.
       - name: Install Buildah (alternative method)
         run: |
           sudo apt-get update
@@ -42,7 +40,6 @@ jobs:
           image: ghcr.io/${{ github.repository_owner }}/bazzite-kde
           tags: latest
           context: .
-          format: docker
           labels: |
             containers.bootc=1
             org.opencontainers.image.title=Bazzite-KDE
