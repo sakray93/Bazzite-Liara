@@ -46,55 +46,7 @@ cat <<EOF > /var/lib/waydroid/waydroid.cfg
 persist.waydroid.multi_windows = true
 EOF
 
-### SECTION 3: Chromebook Linux Audio Patches
-
-echo "--- Applying Chromebook Linux Audio patches ---"
-
-AUDIO_REPO_DIR="/tmp/chromebook-linux-audio-repo"
-git clone https://github.com/WeirdTreeThing/chromebook-linux-audio.git "${AUDIO_REPO_DIR}"
-chmod +x "${AUDIO_REPO_DIR}/setup-audio"
-"${AUDIO_REPO_DIR}/setup-audio" || true
-rm -rf "${AUDIO_REPO_DIR}"
-
-### SECTION 4: Chromebook Keyboard Map Patches
-
-echo "--- Applying Chromebook Keyboard Map patches ---"
-
-KEYBOARD_REPO_BASE_URL="https://raw.githubusercontent.com/WeirdTreeThing/cros-keyboard-map/main"
-curl -sSL "${KEYBOARD_REPO_BASE_URL}/90-cros-keyboard.rules" -o /etc/udev/rules.d/90-cros-keyboard.rules
-curl -sSL "${KEYBOARD_REPO_BASE_URL}/cros-keyboard" -o /usr/share/libinput/cros-keyboard
-chmod 644 /usr/share/libinput/cros-keyboard
-# Note: udevadm commands are typically for live systems; files will be correctly placed in the image.
-# udevadm control --reload-rules
-# udevadm trigger
-
-### SECTION 5: Custom Kernel Installation (AMD Stoney Ridge)
-
-echo "--- Installing custom kernel for AMD Stoney Ridge (AMDA4) ---"
-
-KERNEL_BASE_URL="https://chultrabook.sakamoto.pl/stoneyridge-kernel/fedora-6.14.4-300.fc42.x86_64"
-KERNEL_VERSION="6.14.4-300.fc42.x86_64"
-KERNEL_TEMP_DIR="/tmp/custom-kernel-rpms"
-
-mkdir -p "${KERNEL_TEMP_DIR}"
-curl -sSL "${KERNEL_BASE_URL}/kernel-${KERNEL_VERSION}.rpm" -o "${KERNEL_TEMP_DIR}/kernel-${KERNEL_VERSION}.rpm"
-curl -sSL "${KERNEL_BASE_URL}/kernel-core-${KERNEL_VERSION}.rpm" -o "${KERNEL_TEMP_DIR}/kernel-core-${KERNEL_VERSION}.rpm"
-curl -sSL "${KERNEL_BASE_URL}/kernel-modules-${KERNEL_VERSION}.rpm" -o "${KERNEL_TEMP_DIR}/kernel-modules-${KERNEL_VERSION}.rpm"
-curl -sSL "${KERNEL_BASE_URL}/kernel-modules-core-${KERNEL_VERSION}.rpm" -o "${KERNEL_TEMP_DIR}/kernel-modules-core-${KERNEL_VERSION}.rpm"
-
-rpm-ostree override replace \
-    --remove kernel \
-    --remove kernel-core \
-    --remove kernel-modules \
-    --remove kernel-modules-core \
-    "${KERNEL_TEMP_DIR}/kernel-${KERNEL_VERSION}.rpm" \
-    "${KERNEL_TEMP_DIR}/kernel-core-${KERNEL_VERSION}.rpm" \
-    "${KERNEL_TEMP_DIR}/kernel-modules-${KERNEL_VERSION}.rpm" \
-    "${KERNEL_TEMP_DIR}/kernel-modules-core-${KERNEL_VERSION}.rpm"
-
-rm -rf "${KERNEL_TEMP_DIR}"
-
-### SECTION 6: AMD Proprietary Driver Fallback & Performance Tweaks
+### SECTION 3: AMD Proprietary Driver Fallback & Performance Tweaks
 
 echo "--- Installing AMD proprietary drivers fallback and performance tweaks ---"
 
@@ -106,13 +58,13 @@ fi
 # Enable AMDGPU DC and power management optimizations
 echo "options amdgpu dc=1 power_dpm_state=performance power_dpm_force_performance_level=high" > /etc/modprobe.d/amdgpu.conf
 
-### SECTION 7: Vulkan SDK Setup
+### SECTION 4: Vulkan SDK Setup
 
 echo "--- Installing Vulkan SDK ---"
 
 dnf5 install -y vulkan-sdk
 
-### SECTION 8: AI Tools Installation and Setup
+### SECTION 5: AI Tools Installation and Setup
 
 echo "--- Installing AI tools for creators ---"
 
@@ -132,7 +84,7 @@ pip install diffusers transformers accelerate --quiet
 
 deactivate
 
-### SECTION 9: Create AI Tool Launcher Script and Desktop Entry
+### SECTION 6: Create AI Tool Launcher Script and Desktop Entry
 
 echo "--- Creating AI tool launcher script and desktop shortcut ---"
 
