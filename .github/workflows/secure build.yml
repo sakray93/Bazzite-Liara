@@ -1,37 +1,63 @@
-name: Build and Push Bazzite KDE AI Image
+name: Build Bazzite KDE Image
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
-  build:
+  build-image:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Setup Buildah environment
+      - name: Set up Buildah
         uses: redhat-actions/setup-buildah@v2
 
-      - name: Build container image with Buildah
-        run: |
-          buildah bud \
-            --format docker \
-            -f ./Containerfile \
-            -t sakray93/bazzite-kde-ai:latest .
+      - name: Build Bazzite KDE image
+        uses: redhat-actions/buildah-build@v2
+        with:
+          containerfiles: |
+            ./Containerfile
+          image: ghcr.io/${{ github.repository_owner }}/bazzite-kde
+          tags: latest
+          context: .
+          format: docker
+          labels: |
+            containers.bootc=1
+            org.opencontainers.image.title=Bazzite-KDE
+            org.opencontainers.image.description=Customized Bazzite KDE Fedora image
+            org.opencontainers.image.version=latest
+            org.opencontainers.image.source=${{ github.repository }}
+            org.opencontainers.image.vendor=${{ github.repository_owner }}
+            org.opencontainers.image.licenses=Apache-2.0
+
+      - name: Push image to GitHub Container Registry (main branch only)
+        if: github.ref == 'refs/heads/main'
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          registry: ghcr.io
+          image: bazzite-kde
+          tags: latest
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log in to Docker Hub
-        if: ${{ secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN }}
+        if: github.ref == 'refs/heads/main' && secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Push container image to Docker Hub
-        if: ${{ secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN }}
+      - name: Push image to Docker Hub
+        if: github.ref == 'refs/heads/main' && secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN
         run: |
-          buildah push sakray93/bazzite-kde-ai:latest docker://docker.io/sakray93/bazzite-kde-ai:latest
+          buildah push ghcr.io/${{ github.repository_owner }}/bazzite-kde:latest docker://docker.io/${{ secrets.DOCKERHUB_USERNAME }}/bazzite-kde:latest
