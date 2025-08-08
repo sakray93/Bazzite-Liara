@@ -6,10 +6,6 @@ set -ouex pipefail
 
 echo "--- Installing core packages and general utilities ---"
 
-# The `flatpak install` command below will be modified to remove `com.visualstudio.code`
-# as it is causing a sandbox creation error.
-
-# Corrected dnf5 command: removed non-existent packages.
 dnf5 install -y \
     git \
     python3 \
@@ -81,10 +77,10 @@ echo "--- Installing AI tools for creators ---"
 # Python virtualenv for AI tools
 dnf5 install -y python3-pip python3-virtualenv
 
-# Creating the directory in a new location
-if [ ! -d "/usr/local/ai-tools" ]; then
-    mkdir /usr/local/ai-tools
-fi
+# Explicitly ensure /usr/local exists (though it should in a normal environment)
+mkdir -p /usr/local
+# Now create the target directory for AI tools
+mkdir -p /usr/local/ai-tools
 cd /usr/local/ai-tools
 
 # Corrected virtualenv setup: chained commands to ensure pip runs inside the venv.
@@ -107,7 +103,6 @@ cat <<'EOF' > /usr/local/bin/launch-drawing-mode.sh
 # This script launches a drawing application (Krita) in a touch-friendly way.
 
 # Switch to the Krita session
-# Replace with the actual command to switch the session manager or launch gamescope/kiosk mode
 # For a simple full-screen app, just running Krita is often enough.
 # Krita has a "canvas only" mode which can be activated with the 'Tab' key.
 krita --fullscreen --nonscaling-mode
@@ -130,7 +125,7 @@ EOF
 
 ### SECTION 7: Create AI Tool Launcher Script and Desktop Entry
 
-echo "--- Creating AI tool launcher script and desktop shortcut ---"
+echo "--- Creating AI Tool Launcher Script and Desktop Shortcut ---"
 
 cat <<'EOF' > /usr/local/bin/start-stable-diffusion.sh
 #!/usr/bin/env bash
