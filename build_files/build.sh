@@ -6,7 +6,6 @@ set -ouex pipefail
 
 echo "--- Installing core packages and general utilities ---"
 
-# Removed the conflicting 'mesa-vdpau-drivers' package.
 dnf5 install -y \
     git \
     alsa-utils \
@@ -36,11 +35,6 @@ dnf5 install -y \
     breeze-gtk
 
 ### SECTION 2: System and Performance Tweaks
-
-# --- Custom Plymouth Boot Splash ---
-echo "--- Setting up custom boot splash theme ---"
-dnf5 install -y plymouth-themes
-plymouth-set-default-theme -R bgrt
 
 # --- GPU Video Rendering Tweaks for Streaming ---
 echo "--- Enabling GPU video rendering for online streams ---"
