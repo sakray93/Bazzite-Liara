@@ -1,6 +1,102 @@
 name: Build Bazzite KDE Image
 
 on:
+  schedule:
+    # Build at 10:00 UTC every Tuesday and Saturday
+    - cron: "00 10 * * 2,6"
+  push:
+    branches: [ "main" ]
+    paths-ignore: # don't rebuild if only documentation has changed
+      - "**.md"
+  pull_request:
+    branches: [ "main" ]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch: # Allow manually triggering builds
+
+concurrency:
+  # Only run one build at a time for this workflow
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  build-image:
+    name: Build Custom Bazzite KDE Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write # Needed for potential OIDC integration with registry/cosign if used
+
+    strategy:
+      fail-fast: false # Stop GH from cancelling all matrix builds if one fails
+      matrix:
+        # Define the path to your Containerfile here.
+        # This allows for easy expansion to multiple Containerfiles later.
+        containerfile_path:
+          - ./Containerfile
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Buildah
+        # This step ensures Buildah is available on the runner.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y buildah
+
+      - name: Log in to GitHub Container Registry
+        # Authenticates with GHCR before pushing images.
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Bazzite KDE image
+        # Uses your specified Containerfile from the matrix
+        uses: redhat-actions/buildah-build@v2
+        id: build_image
+        with:
+          containerfiles: ${{ matrix.containerfile_path }}
+          image: ghcr.io/${{ github.repository_owner }}/bazzite-kde
+          tags: latest
+          context: .
+          labels: |
+            containers.bootc=1
+            org.opencontainers.image.title=Bazzite-KDE
+            org.opencontainers.image.description=Customized Bazzite KDE Fedora image
+            org.opencontainers.image.version=latest
+            org.opencontainers.image.source=${{ github.repository }}
+            org.opencontainers.image.vendor=${{ github.repository_owner }}
+            org.opencontainers.image.licenses=Apache-2.0
+
+      - name: Push image to GitHub Container Registry
+        # Pushes the built image to GHCR.
+        if: github.ref == 'refs/heads/main'
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build_image.outputs.image }}
+          tags: ${{ steps.build_image.outputs.tags }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to Docker Hub
+        # Logs into Docker Hub if credentials are provided and it's the main branch.
+        if: github.ref == 'refs/heads/main' && secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push image to Docker Hub
+        # Pushes the image to Docker Hub if authenticated.
+        if: github.ref == 'refs/heads/main' && secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN
+        run: |
+          buildah push ${{ steps.build_image.outputs.image }}:${{ steps.build_image.outputs.tags }} docker://docker.io/${{ secrets.DOCKERHUB_USERNAME }}/bazzite-kde:${{ steps.build_image.outputs.tags }}name: Build Bazzite KDE Image
+
+on:
   push:
     branches: [ "main" ]
   pull_request:
