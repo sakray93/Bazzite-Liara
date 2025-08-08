@@ -42,7 +42,9 @@ flatpak install -y flathub \
     org.blender.Blender \
     com.valvesoftware.Steam \
     net.lutris.Lutris \
-    org.winehq.Wine
+    org.winehq.Wine-stable \
+    com.microsoft.Edge \
+    com.visualstudio.code
 
 ###############################################################################
 # SECTION 3: Waydroid Setup (Android Emulation)
@@ -137,6 +139,36 @@ Icon=applications-graphics
 Terminal=false
 Type=Application
 Categories=Graphics;Utility;Development;
+EOF
+
+###############################################################################
+# SECTION 8: Copilot Nativefier App with Custom Icon
+###############################################################################
+
+echo "--- Creating Copilot desktop app with Nativefier ---"
+
+# Ensure Node.js and Nativefier are installed
+sudo dnf install -y nodejs
+npm install -g nativefier
+
+# Create Copilot app
+mkdir -p /opt/copilot-app
+nativefier --name "Copilot" --single-instance --tray --width 1280 --height 800 "https://copilot.microsoft.com" /opt/copilot-app
+
+# Download custom icon (optional: replace with your own)
+mkdir -p /usr/share/icons/copilot
+curl -L -o /usr/share/icons/copilot/copilot.png https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Microsoft_Copilot_Icon.svg/1024px-Microsoft_Copilot_Icon.svg.png
+
+# Create launcher
+cat <<EOF > /usr/share/applications/copilot.desktop
+[Desktop Entry]
+Name=Copilot
+Comment=Launch Microsoft Copilot AI Assistant
+Exec=/opt/copilot-app/Copilot-linux-x64/Copilot
+Icon=/usr/share/icons/copilot/copilot.png
+Terminal=false
+Type=Application
+Categories=Utility;Development;AI;
 EOF
 
 echo "--- Custom tools setup completed ---"
