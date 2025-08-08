@@ -6,7 +6,7 @@ set -ouex pipefail
 
 echo "--- Installing core packages and general utilities ---"
 
-# Removed python-related packages since AI tools were removed
+# Removed the conflicting 'mesa-vdpau-drivers' package.
 dnf5 install -y \
     git \
     alsa-utils \
@@ -33,7 +33,6 @@ dnf5 install -y \
     'qt6-*' \
     'qt5-*' \
     mesa-va-drivers \
-    mesa-vdpau-drivers \
     breeze-gtk
 
 ### SECTION 2: System and Performance Tweaks
