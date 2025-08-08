@@ -42,9 +42,11 @@ flatpak install -y flathub \
     org.blender.Blender \
     com.valvesoftware.Steam \
     net.lutris.Lutris \
-    org.winehq.Wine-stable \
     com.microsoft.Edge \
     com.visualstudio.code
+
+echo "--- Installing Wine (Staging) via Flatpak ---"
+echo 5 | flatpak install -y flathub org.winehq.Wine
 
 ###############################################################################
 # SECTION 3: Waydroid Setup (Android Emulation)
@@ -155,7 +157,7 @@ npm install -g nativefier
 mkdir -p /opt/copilot-app
 nativefier --name "Copilot" --single-instance --tray --width 1280 --height 800 "https://copilot.microsoft.com" /opt/copilot-app
 
-# Download custom icon (optional: replace with your own)
+# Download custom icon
 mkdir -p /usr/share/icons/copilot
 curl -L -o /usr/share/icons/copilot/copilot.png https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Microsoft_Copilot_Icon.svg/1024px-Microsoft_Copilot_Icon.svg.png
 
