@@ -6,9 +6,9 @@ set -ouex pipefail
 
 echo "--- Installing core packages and general utilities ---"
 
+# Removed python-related packages since AI tools were removed
 dnf5 install -y \
     git \
-    python3 \
     alsa-utils \
     pulseaudio-utils \
     curl \
@@ -31,22 +31,39 @@ dnf5 install -y \
     lutris \
     wine \
     'qt6-*' \
-    'qt5-*'
+    'qt5-*' \
+    mesa-va-drivers \
+    mesa-vdpau-drivers \
+    breeze-gtk
 
-### SECTION 2: Android Emulation Support (Waydroid)
+### SECTION 2: System and Performance Tweaks
 
-echo "--- Installing Waydroid for Android emulation support ---"
+# --- Custom Plymouth Boot Splash ---
+echo "--- Setting up custom boot splash theme ---"
+dnf5 install -y plymouth-themes
+plymouth-set-default-theme -R bgrt
 
-dnf5 install -y waydroid
-
-mkdir -p /var/lib/waydroid/
-cat <<EOF > /var/lib/waydroid/waydroid.cfg
-[properties]
-persist.waydroid.multi_windows = true
+# --- GPU Video Rendering Tweaks for Streaming ---
+echo "--- Enabling GPU video rendering for online streams ---"
+# Add Mesa VA-API and VDPAU drivers for hardware video acceleration.
+# A .drirc file can be used to set global rendering options for Mesa.
+# This helps applications like OBS Studio, browsers, and media players use the GPU.
+# The user's AMD A4 APU should benefit greatly from this.
+mkdir -p /etc/X11/xorg.conf.d
+cat <<EOF > /etc/X11/xorg.conf.d/20-radeon.conf
+Section "Device"
+    Identifier  "AMDGPU"
+    Driver      "amdgpu"
+EndSection
 EOF
 
-### SECTION 3: AMD Proprietary Driver Fallback & Performance Tweaks
+# Note: The amount of dedicated VRAM for an AMD A4 APU is a BIOS/UEFI setting.
+# It cannot be changed by this script. To increase it, you must enter your
+# laptop's BIOS/UEFI settings and look for a setting like "UMA Frame Buffer Size"
+# or "Shared Memory" in a menu like "Advanced" or "Graphics Configuration".
+# The maximum is usually limited to 2GB.
 
+# --- AMD Proprietary Driver Fallback & Performance Tweaks ---
 echo "--- Installing AMD proprietary drivers fallback and performance tweaks ---"
 
 if ! dnf5 list --installed amdgpu-pro &>/dev/null; then
@@ -57,8 +74,7 @@ fi
 # Enable AMDGPU DC and power management optimizations
 echo "options amdgpu dc=1 power_dpm_state=performance power_dpm_force_performance_level=high" > /etc/modprobe.d/amdgpu.conf
 
-### SECTION 4: ZRAM Configuration (Optional)
-
+# --- ZRAM Configuration (Optional) ---
 echo "--- Ensuring ZRAM is enabled ---"
 
 # Install zram-generator if it's not already present
@@ -70,30 +86,19 @@ cat <<EOF > /etc/systemd/zram-generator.conf
 zram-size = min(ram/2, 4096)
 EOF
 
-### SECTION 5: AI Tools Installation and Setup
+### SECTION 3: Android Emulation Support (Waydroid)
 
-echo "--- Installing AI tools for creators ---"
+echo "--- Installing Waydroid for Android emulation support ---"
 
-# Python virtualenv for AI tools
-dnf5 install -y python3-pip python3-virtualenv
+dnf5 install -y waydroid
 
-# Explicitly ensure /usr/local exists (though it should in a normal environment)
-mkdir -p /usr/local
-# Now create the target directory for AI tools
-mkdir -p /usr/local/ai-tools
-cd /usr/local/ai-tools
+mkdir -p /var/lib/waydroid/
+cat <<EOF > /var/lib/waydroid/waydroid.cfg
+[properties]
+persist.waydroid.multi_windows = true
+EOF
 
-# Corrected virtualenv setup: chained commands to ensure pip runs inside the venv.
-python3 -m virtualenv venv && \
-source venv/bin/activate && \
-pip install --upgrade pip && \
-pip install diffusers transformers accelerate --quiet
-
-# Install other AI tools (stable-diffusion-webui, etc.) - placeholder for actual install commands
-
-deactivate
-
-### SECTION 6: Drawing Mode Setup
+### SECTION 4: Drawing Mode Setup
 
 echo "--- Creating a 'Drawing Mode' launcher ---"
 
@@ -121,37 +126,6 @@ Icon=applications-graphics
 Terminal=false
 Type=Application
 Categories=Graphics;Utility;
-EOF
-
-### SECTION 7: Create AI Tool Launcher Script and Desktop Entry
-
-echo "--- Creating AI Tool Launcher Script and Desktop Shortcut ---"
-
-cat <<'EOF' > /usr/local/bin/start-stable-diffusion.sh
-#!/usr/bin/env bash
-source /usr/local/ai-tools/venv/bin/activate
-# Start your AI tool web UI here; example placeholder:
-echo "Starting Stable Diffusion Web UI..."
-# Replace with actual start command
-python -m diffusers &
-
-# Keep script running
-wait
-EOF
-
-chmod +x /usr/local/bin/start-stable-diffusion.sh
-
-mkdir -p /usr/share/applications
-
-cat <<'EOF' > /usr/share/applications/stable-diffusion.desktop
-[Desktop Entry]
-Name=Stable Diffusion AI
-Comment=Launch Stable Diffusion Web UI for AI image generation
-Exec=/usr/local/bin/start-stable-diffusion.sh
-Icon=applications-graphics
-Terminal=false
-Type=Application
-Categories=Graphics;Utility;Development;
 EOF
 
 echo "--- build.sh script finished ---"
