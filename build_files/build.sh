@@ -62,8 +62,6 @@ echo "options amdgpu dc=1 power_dpm_state=performance power_dpm_force_performanc
 
 echo "--- Installing Vulkan SDK ---"
 
-dnf5 install -y vulkan-sdk
-
 ### SECTION 5: AI Tools Installation and Setup
 
 echo "--- Installing AI tools for creators ---"
