@@ -2,9 +2,9 @@
 FROM scratch AS ctx
 COPY build_files /
 
-# Stage 2: Build your custom Bazzite KDE image
-# Using the correct base image for Fedora with KDE.
-FROM ghcr.io/ublue-os/bazzite-kde:stable
+# Stage 2: Build your custom Bazzite image
+# Using the standard Bazzite image with the "latest" tag.
+FROM ghcr.io/ublue-os/bazzite:latest
 
 ### MODIFICATIONS
 ## The following RUN directive mounts the 'ctx' stage and executes your 'build.sh' script.
