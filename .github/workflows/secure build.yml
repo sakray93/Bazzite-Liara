@@ -6,15 +6,14 @@ on:
     - cron: "00 10 * * 2,6"
   push:
     branches: [ "main" ]
-    paths-ignore: # don't rebuild if only documentation has changed
+    paths-ignore:
       - "**.md"
   pull_request:
     branches: [ "main" ]
     types: [opened, synchronize, reopened]
-  workflow_dispatch: # Allow manually triggering builds
+  workflow_dispatch:
 
 concurrency:
-  # Only run one build at a time for this workflow
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
 
@@ -28,7 +27,7 @@ jobs:
       id-token: write
 
     strategy:
-      fail-fast: false # Stop GH from cancelling all matrix builds if one fails
+      fail-fast: false
       matrix:
         containerfile_path:
           - ./Containerfile
