@@ -42,7 +42,6 @@ flatpak install -y flathub \
     org.blender.Blender \
     com.valvesoftware.Steam \
     net.lutris.Lutris \
-    com.microsoft.Edge \
     com.visualstudio.code
 
 echo "--- Installing Wine (Staging) via Flatpak ---"
@@ -171,6 +170,31 @@ Icon=/usr/share/icons/copilot/copilot.png
 Terminal=false
 Type=Application
 Categories=Utility;Development;AI;
+EOF
+
+###############################################################################
+# SECTION 9: Post-install Script for Microsoft Edge
+###############################################################################
+
+echo "--- Creating post-install script for Microsoft Edge ---"
+
+cat <<'EOF' > /usr/local/bin/install-edge.sh
+#!/usr/bin/env bash
+echo "Installing Microsoft Edge via Flatpak..."
+flatpak install -y flathub com.microsoft.Edge
+EOF
+
+chmod +x /usr/local/bin/install-edge.sh
+
+cat <<EOF > /usr/share/applications/install-edge.desktop
+[Desktop Entry]
+Name=Install Microsoft Edge
+Comment=Run this once to install Edge browser
+Exec=/usr/local/bin/install-edge.sh
+Icon=web-browser
+Terminal=true
+Type=Application
+Categories=Network;Utility;
 EOF
 
 echo "--- Custom tools setup completed ---"
