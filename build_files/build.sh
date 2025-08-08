@@ -81,9 +81,11 @@ echo "--- Installing AI tools for creators ---"
 # Python virtualenv for AI tools
 dnf5 install -y python3-pip python3-virtualenv
 
-# The `mkdir` command is not needed as `/opt` already exists.
-mkdir -p /opt/ai-tools
-cd /opt/ai-tools
+# Creating the directory in a new location
+if [ ! -d "/usr/local/ai-tools" ]; then
+    mkdir /usr/local/ai-tools
+fi
+cd /usr/local/ai-tools
 
 # Corrected virtualenv setup: chained commands to ensure pip runs inside the venv.
 python3 -m virtualenv venv && \
@@ -132,7 +134,7 @@ echo "--- Creating AI tool launcher script and desktop shortcut ---"
 
 cat <<'EOF' > /usr/local/bin/start-stable-diffusion.sh
 #!/usr/bin/env bash
-source /opt/ai-tools/venv/bin/activate
+source /usr/local/ai-tools/venv/bin/activate
 # Start your AI tool web UI here; example placeholder:
 echo "Starting Stable Diffusion Web UI..."
 # Replace with actual start command
