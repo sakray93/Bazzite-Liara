@@ -1,8 +1,6 @@
 name: Build Bazzite KDE Image
 
 on:
-  schedule:
-        # no auto build
   push:
     branches: [ "main" ]
     paths-ignore: # don't rebuild if only documentation has changed
