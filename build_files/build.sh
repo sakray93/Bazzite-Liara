@@ -8,13 +8,9 @@ echo "--- Installing core packages and general utilities ---"
 
 dnf5 install -y \
     git \
-    alsa-utils \
-    pulseaudio-utils \
     curl \
     wget \
     fastfetch \
-    htop \
-    vim-enhanced \
     kde-gtk-config \
     mesa-vulkan-drivers \
     vulkan-loader \
@@ -22,13 +18,8 @@ dnf5 install -y \
     vulkan-validation-layers \
     libva-utils \
     ffmpeg \
-    gimp \
-    krita \
-    inkscape \
-    blender \
     steam \
     lutris \
-    wine \
     'qt6-*' \
     'qt5-*' \
     mesa-va-drivers \
