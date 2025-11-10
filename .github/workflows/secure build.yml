@@ -81,14 +81,6 @@ on:
       - "repo_files/**"
   workflow_dispatch:
 
-env:
-  IMAGE_DESC: "${{ github.event.repository.description }}"
-  IMAGE_KEYWORDS: "bootc,ublue,universal-blue"
-  IMAGE_LOGO_URL: "https://raw.githubusercontent.com/astrovm/amyos/main/repo_files/amy-logo-white.png" # Put your own image here for a fancy profile on https://artifacthub.io/!
-  IMAGE_NAME: "${{ github.event.repository.name }}" # output image name, usually same as repo name
-  IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}" # do not edit
-  DEFAULT_TAG: "latest"
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}-${{ inputs.brand_name}}-${{ inputs.stream_name }}
   cancel-in-progress: true
