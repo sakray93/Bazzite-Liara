@@ -2,8 +2,7 @@ name: Build Bazzite KDE Image
 
 on:
   schedule:
-    # Build at 10:00 UTC every Tuesday and Saturday
-    - cron: "00 10 * * 2,6"
+        # no auto build
   push:
     branches: [ "main" ]
     paths-ignore: # don't rebuild if only documentation has changed
